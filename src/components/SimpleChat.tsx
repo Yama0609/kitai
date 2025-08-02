@@ -1,24 +1,70 @@
+'use client'
+
+import { useState } from 'react'
+
 export default function SimpleChat() {
-  const sampleMessages = [
+  const [messages, setMessages] = useState([
     {
       id: 1,
       sender: 'ai',
       message: 'こんにちは！不動産投資についてご相談をお受けしています。どのようなことでお困りでしょうか？',
-      timestamp: '14:30'
-    },
-    {
-      id: 2,
-      sender: 'user',
-      message: '予算2000万円で都内の投資物件を探しています。初心者なので何から始めれば良いかわかりません。',
-      timestamp: '14:32'
-    },
-    {
-      id: 3,
-      sender: 'ai',
-      message: '承知いたしました。2000万円のご予算でしたら、都内でも区を選べば良い物件が見つかります。まず、どちらの地域をお考えでしょうか？',
-      timestamp: '14:33'
+      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     }
-  ]
+  ])
+  
+  const [inputMessage, setInputMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return
+    
+    const userMessage = {
+      id: Date.now(),
+      sender: 'user',
+      message: inputMessage,
+      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    }
+    
+    setMessages(prev => [...prev, userMessage])
+    setInputMessage('')
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputMessage
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const aiMessage = {
+          id: Date.now() + 1,
+          sender: 'ai',
+          message: data.message,
+          timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        }
+        setMessages(prev => [...prev, aiMessage])
+      } else {
+        throw new Error('API request failed')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      const errorMessage = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        message: '申し訳ございません。一時的にエラーが発生しています。しばらく後に再度お試しください。',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -29,7 +75,7 @@ export default function SimpleChat() {
 
       {/* メッセージエリア */}
       <div className="h-96 overflow-y-auto p-4 bg-gray-50">
-        {sampleMessages.map((msg) => (
+        {messages.map((msg) => (
           <div key={msg.id} className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
             <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
               msg.sender === 'user' 
@@ -43,6 +89,16 @@ export default function SimpleChat() {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="text-left mb-4">
+            <div className="inline-block bg-white border border-gray-200 text-gray-800 rounded-lg rounded-bl-none px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <span className="text-sm">AIが考えています...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 入力エリア */}
@@ -50,19 +106,27 @@ export default function SimpleChat() {
         <div className="flex space-x-2">
           <input
             type="text"
-            placeholder="メッセージを入力（まだ送信できません）"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
-            disabled
+            placeholder="不動産投資についてご質問ください"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
           />
           <button
-            className="bg-gray-400 text-white px-6 py-2 rounded-lg cursor-not-allowed"
-            disabled
+            onClick={sendMessage}
+            disabled={isLoading || !inputMessage.trim()}
+            className={`px-6 py-2 rounded-lg font-medium ${
+              isLoading || !inputMessage.trim()
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600 transition-colors'
+            }`}
           >
-            送信
+            {isLoading ? '送信中...' : '送信'}
           </button>
         </div>
-        <div className="mt-2 text-xs text-gray-500 text-center">
-          ✅ Step 2: 見た目のみ表示中（次のステップで送信機能を追加します）
+        <div className="mt-2 text-xs text-green-600 text-center">
+          🎉 Step 3: リアルタイムAIチャット機能が動作しています！
         </div>
       </div>
     </div>
