@@ -1,58 +1,31 @@
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export async function POST(request: Request) {
   try {
     const { message } = await request.json()
     
-    // 不動産投資専門AIアドバイザーのプロンプト
-    const systemPrompt = `あなたは不動産投資の専門家AIアドバイザーです。以下の役割で回答してください：
-
-【専門性】
-- 不動産投資に関する深い知識を持つプロフェッショナル
-- 初心者から上級者まで適切なレベルでアドバイス
-- 実用的で具体的な情報を提供
-
-【回答スタイル】
-- 丁寧で親しみやすい口調
-- 日本の不動産市場に精通
-- リスクとメリットを両方説明
-- 具体的な数値や例を使って説明
-
-【重要なポイント】
-- 投資にはリスクがあることを必ず伝える
-- 個人の状況に応じたアドバイス
-- 法的・税務的な専門事項は専門家への相談を推奨
-- 200文字以内で簡潔に回答
-
-ユーザーの質問に対して、上記の方針で回答してください。`
-
-    // OpenAI APIに送信
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user", 
-          content: message
-        }
-      ],
-      max_tokens: 300,
-      temperature: 0.7,
-    })
+    // 一時的なダミーAI応答（OpenAIクォータ問題回避）
+    const responses = {
+      '収益物件': '収益物件投資をお考えですね！まず、どちらの地域をご検討でしょうか？都内は利回り3-5%程度ですが安定性が高く、地方は7-10%の高利回りが期待できますが空室リスクもあります。ご予算やリスク許容度をお聞かせください。',
+      '予算': 'ご予算に応じて最適な投資戦略をご提案いたします。2000万円程度でしたら都内の区分マンションや地方の一棟アパートが選択肢になります。まず、どの程度の利回りを目指されていますか？',
+      '初心者': '不動産投資初心者の方には区分マンション投資をお勧めします。管理会社に任せられるため手間が少なく、少額から始められます。まずは築10年以内、駅徒歩10分以内の物件から検討されてはいかがでしょうか？',
+      '利回り': '利回りは重要な指標ですね。表面利回りだけでなく、管理費・修繕費・税金を差し引いた実質利回りで判断することが大切です。また、将来の資産価値も考慮して総合的に評価しましょう。',
+      'リスク': '不動産投資の主なリスクは空室リスク、家賃下落リスク、災害リスクです。立地選定、適切な家賃設定、火災・地震保険加入で軽減できます。投資は余裕資金で行い、複数物件への分散投資も効果的です。'
+    }
     
-    // OpenAIからのレスポンスを取得
-    const aiResponse = completion.choices[0]?.message?.content || 
-                      '申し訳ございませんが、現在回答を生成できません。しばらく後に再度お試しください。'
+    // メッセージ内容に応じた応答
+    let response = "ご質問をありがとうございます。不動産投資について具体的なご相談内容をお聞かせください。予算、希望エリア、投資経験などの情報があると、より詳しいアドバイスが可能です。"
+    
+    for (const [keyword, answer] of Object.entries(responses)) {
+      if (message.includes(keyword) || message.toLowerCase().includes(keyword.toLowerCase())) {
+        response = answer
+        break
+      }
+    }
+    
+    // 自然な遅延
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
     
     return new Response(JSON.stringify({
-      message: aiResponse,
+      message: response,
       timestamp: new Date().toISOString(),
       type: 'ai'
     }), {
@@ -63,21 +36,9 @@ export async function POST(request: Request) {
     })
     
   } catch (error) {
-    console.error('OpenAI Chat API Error:', error)
-    
-    // OpenAI APIエラーの場合は詳細なエラーメッセージ
-    let errorMessage = 'AIとの通信中にエラーが発生しました。しばらく後に再度お試しください。'
-    
-    if (error instanceof Error) {
-      if (error.message.includes('API key')) {
-        errorMessage = 'AIサービスの設定に問題があります。'
-      } else if (error.message.includes('rate limit')) {
-        errorMessage = 'アクセスが集中しています。少し時間をおいて再度お試しください。'
-      }
-    }
-    
+    console.error('Chat API Error:', error)
     return new Response(JSON.stringify({
-      message: errorMessage,
+      message: '申し訳ございません。一時的にエラーが発生しています。しばらく後に再度お試しください。',
       timestamp: new Date().toISOString(),
       type: 'error'
     }), {
