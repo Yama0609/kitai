@@ -125,8 +125,8 @@ export default function SimpleChat() {
             {isLoading ? '送信中...' : '送信'}
           </button>
         </div>
-        <div className="mt-2 text-xs text-green-600 text-center">
-          🎉 Step 3: リアルタイムAIチャット機能が動作しています！
+        <div className="mt-2 text-xs text-blue-600 text-center">
+          💬 不動産投資のご質問をお気軽にどうぞ
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import SimpleChat from '@/components/SimpleChat'
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
@@ -7,21 +9,14 @@ export default function Home() {
             🏢 不動産投資AI相談
           </h1>
           <p className="text-lg text-gray-600 mb-2">
-            最小構成版（まずは表示確認）
+            専門家によるAIアドバイス
           </p>
-          <div className="text-sm text-gray-500 bg-white/60 px-4 py-2 rounded-full inline-block">
-            ✅ Step 1: 基本表示テスト
+          <div className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-full inline-block">
+            🤖 リアルタイムAI相談が可能です
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">動作確認</h2>
-          <p className="text-gray-600">
-            このページが表示されれば、Next.jsが正常に動作しています。
-            <br/>
-            次はチャット機能を段階的に追加していきます。
-          </p>
-        </div>
+        <SimpleChat />
       </div>
     </main>
   )
