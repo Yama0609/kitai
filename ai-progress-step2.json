@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-08-02T12:26:23.067Z",
+  "step": 2,
+  "completed": true,
+  "score": 60,
+  "nextStep": 3,
+  "nextStepDescription": "ダミーAPI作成: 固定レスポンス返却"
+}
