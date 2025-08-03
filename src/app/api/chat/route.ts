@@ -1,5 +1,8 @@
-// Step 7: OpenAI API本格統合 - 不動産投資AI相談システム
+// Step 8: 高度なAI会話フロー統合システム - 投資家プロファイル管理
 import OpenAI from 'openai'
+import { ConversationManager } from '@/lib/ai-features/conversation-flow'
+import { PropertyMatcher } from '@/lib/ai-features/property-matcher'
+import { classifyInvestor } from '@/lib/ai-features/investor-profile'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,14 +10,14 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { message } = await request.json()
+    const { message, sessionId, conversationState } = await request.json()
     
     if (!message || message.trim().length === 0) {
       return new Response(JSON.stringify({
         message: '質問内容を入力してください。不動産投資に関するどんなことでもお聞かせください！',
         timestamp: new Date().toISOString(),
         type: 'error',
-        step: 7
+        step: 8
       }), {
         status: 400,
         headers: {
@@ -22,125 +25,114 @@ export async function POST(request: Request) {
         },
       })
     }
+
+    // セッション管理
+    const sessionKey = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const conversationManager = new ConversationManager(sessionKey, conversationState)
     
-    // テスト用の改良された不動産投資アドバイス（現在デモモード）
+    // ユーザーメッセージを記録
+    conversationManager.addMessage({
+      role: 'user',
+      content: message
+    })
+    
+    // プロファイル情報の抽出と更新
+    const extractedInfo = conversationManager.updateProfileFromMessage(message)
+    const currentState = conversationManager.getState()
+    
+    // 次の質問の取得
+    let nextQuestion = conversationManager.getNextQuestion()
+    let propertyRecommendations = []
+    let aiAnalysis = null
+
+    // 物件推薦フェーズの場合
+    if (currentState.phase === 'property_search' || currentState.phase === 'detailed_advice') {
+      const classification = classifyInvestor(currentState.profile)
+      propertyRecommendations = PropertyMatcher.getRecommendations(currentState.profile, 3)
+      
+      aiAnalysis = {
+        investorLevel: classification.level,
+        maxPropertyPrice: classification.maxPropertyPrice,
+        recommendedYield: classification.recommendedYieldRange,
+        characteristics: classification.characteristics
+      }
+    }
+
+    // デモモード（基本機能フル動作）
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'test-key-for-development' || true) {
       
-      // ユーザーの質問に応じたカスタマイズされたアドバイス
-      let specificAdvice = ''
-      const messageText = message.toLowerCase()
+      // 会話フローに基づく応答生成
+      let response = nextQuestion || '投資に関してご質問をお聞かせください。'
       
-      // 地域別特化アドバイス（札幌・北海道）
-      if (messageText.includes('札幌') || messageText.includes('北海道')) {
-        if (messageText.includes('8') || messageText.includes('８') || messageText.includes('利回り') || messageText.includes('収益')) {
-          specificAdvice = `
-**🏔️ 札幌8%利回り物件 投資分析**
+      // 物件推薦カードを追加
+      if (propertyRecommendations.length > 0) {
+        const propertyCards = propertyRecommendations.map(match => {
+          const property = match.property
+          return `
+**🏢 ${property.name}**
+📍 ${property.location.city}${property.location.ward} (${property.location.nearestStation}徒歩${property.location.walkingMinutes}分)
+💰 価格: ${property.price.toLocaleString()}万円
+📊 利回り: 表面${property.grossYield}% / 実質${property.netYield}%
+🏠 ${property.layout} / ${property.floorArea}㎡
+⭐ マッチ度: ${match.matchScore}点/100点
 
-1. **札幌市場の現状** - 人口約196万人、安定した賃貸需要
-2. **8%利回りの実現性** - 中央区6-8%、西区・東区8-10%が相場
-3. **推奨投資エリア**
-   - 中央区（大通・すすきの）：観光・ビジネス需要
-   - 北区（札幌駅周辺）：交通利便性抜群
-   - 豊平区：住環境良好、ファミリー需要
+**推薦理由:**
+${match.reasons.map(r => `• ${r}`).join('\n')}
 
-4. **季節要因の考慮** - 暖房費込み家賃が一般的（月+5,000-15,000円）
-
-**札幌特有のリスク＆対策**
-- **除雪・雪害対策**: 年間10-20万円の除雪費用を想定
-- **暖房設備投資**: ガス暖房推奨（灯油より管理楽）
-- **学生需要活用**: 北海道大学（北18条）周辺は安定需要
-- **観光需要**: 中央区は民泊転用可能性あり（法的確認必要）
-
-**💰 札幌8%物件の収支例**
-物件価格: 2,500万円
-家賃収入: 年200万円（月16.7万円）
-表面利回り: 8.0%
-実質利回り: 約6.5%（除雪費・管理費控除後）`
-        } else {
-          specificAdvice = `
-**🏔️ 札幌不動産投資 完全ガイド**
-
-1. **立地戦略** - 地下鉄沿線重視
-   - 南北線：さっぽろ〜真駒内
-   - 東西線：宮の沢〜新さっぽろ
-   - 東豊線：栄町〜福住
-
-2. **物件タイプ別 家賃相場**
-   - 1K: 3.5-5.5万円（学生・単身者向け）
-   - 1LDK: 5-8万円（若年カップル向け）
-   - 2-3LDK: 7-12万円（ファミリー向け）
-
-3. **北海道特有の建物仕様**
-   - 二重窓・断熱材強化必須
-   - セントラルヒーティング導入物件が人気
-   - 駐車場確保重要（1台分必須）
-
-4. **管理費用** - 本州より高め（除雪・暖房管理費）`
-        }
-      } else if (messageText.includes('買いたい') || messageText.includes('購入') || messageText.includes('欲しい') || messageText.includes('かう')) {
-        specificAdvice = `
-**物件購入のステップ**
-1. **資金計画の確立** - 自己資金と借入額を明確に
-2. **物件選定基準** - 立地・築年数・収益性を重視
-3. **物件調査** - 現地確認と周辺環境チェック
-4. **収支シミュレーション** - 家賃収入と維持費を計算`
-      } else if (messageText.includes('予算') || messageText.includes('資金') || messageText.includes('お金')) {
-        specificAdvice = `
-**資金計画のポイント**
-1. **自己資金20-30%** - 物件価格の2-3割準備
-2. **諸費用8-10%** - 登記費用・仲介手数料等
-3. **運転資金** - 空室・修繕費用の備え
-4. **ローン金利** - 現在1-3%程度で推移`
-      } else if (messageText.includes('利回り') || messageText.includes('収益') || messageText.includes('儲け')) {
-        specificAdvice = `
-**利回りの基本知識**
-1. **表面利回り** - 年間家賃収入÷物件価格×100
-2. **実質利回り** - (年間家賃-経費)÷(物件価格+諸費用)×100
-3. **目安基準** - 都心部5-7%、地方7-10%
-4. **注意点** - 高利回りは高リスクの可能性`
-      } else {
-        specificAdvice = `
-**不動産投資の基本戦略**
-1. **立地重視** - 駅徒歩10分以内、人口増加エリア
-2. **物件タイプ** - ワンルーム、ファミリー向けの選択
-3. **管理方法** - 自主管理vs管理会社委託
-4. **出口戦略** - 売却タイミングの計画`
+**投資ポイント:**
+${property.investmentHighlights.slice(0, 2).map(h => `• ${h}`).join('\n')}
+${match.warnings.length > 0 ? `\n⚠️ ${match.warnings[0]}` : ''}
+`
+        }).join('\n---\n')
+        
+        response += `\n\n**🎯 あなたにお勧めの物件**\n\n${propertyCards}`
       }
-      
+
+      // AI分析情報を追加
+      if (aiAnalysis) {
+        const levelNames = {
+          'beginner': 'ビギナー投資家',
+          'experienced': '経験豊富な投資家',
+          'semi-pro': 'セミプロ投資家', 
+          'pro': 'プロ投資家'
+        }
+        
+        response += `\n\n**📊 あなたの投資家プロファイル**
+🎯 レベル: ${levelNames[aiAnalysis.investorLevel]}
+💰 推奨物件価格: ${aiAnalysis.maxPropertyPrice.toLocaleString()}万円以下
+📈 目標利回り: ${aiAnalysis.recommendedYield.min}-${aiAnalysis.recommendedYield.max}%
+
+**特徴:**
+${aiAnalysis.characteristics.map(c => `• ${c}`).join('\n')}`
+      }
+
+      // AIメッセージを記録
+      const aiMessage = conversationManager.addMessage({
+        role: 'assistant',
+        content: response,
+        metadata: {
+          phase: currentState.phase,
+          extractedInfo,
+          suggestions: propertyRecommendations.map(p => p.property.name)
+        }
+      })
+
       return new Response(JSON.stringify({
-        message: `ご質問「${message}」にお答えします！
-
-🏢 **不動産投資AI相談 - デモモード**
-
-${specificAdvice}
-
-**⚠️ リスク管理も重要です**
-- 空室リスク：稼働率85-90%を想定
-- 金利上昇リスク：固定金利も検討
-- 災害リスク：保険加入は必須
-- 法的リスク：法改正への対応
-
-**📊 収益シミュレーション例**
-物件価格：3,000万円
-家賃収入：年240万円（月20万円）
-表面利回り：8.0%
-実質利回り：約6.0%（諸経費控除後）
-
-**次のステップ**
-1. 具体的な予算設定
-2. 希望エリアの絞り込み
-3. 物件情報収集開始
-4. 金融機関への事前相談
-
-*投資判断は最終的にご自身の責任で行ってください。詳細は不動産投資の専門家にご相談することをお勧めします。*
-
----
-現在はデモモードで動作中です。より詳細な分析機能準備中です！`,
+        message: response,
         timestamp: new Date().toISOString(),
         type: 'ai',
-        step: 7,
+        step: 8,
         isDemo: true,
-        model: 'demo-mode'
+        model: 'enhanced-conversation-flow',
+        sessionId: sessionKey,
+        conversationState: conversationManager.getSerializableState(),
+        extractedProfile: extractedInfo,
+        propertyRecommendations: propertyRecommendations.map(match => ({
+          property: match.property,
+          matchScore: match.matchScore,
+          recommendation: match.recommendation
+        })),
+        aiAnalysis
       }), {
         status: 200,
         headers: {
@@ -149,49 +141,55 @@ ${specificAdvice}
       })
     }
     
-    // 不動産投資専用のシステムプロンプト（実際のOpenAI API使用時）
-    const systemPrompt = `あなたは日本の不動産投資に特化した専門のAIアドバイザーです。以下の特徴でユーザーに価値ある情報を提供してください：
+    // 高度なOpenAI統合（会話履歴とプロファイル考慮）
+    const conversationHistory = currentState.conversationHistory.slice(-10) // 最新10件のみ
+    
+    const enhancedSystemPrompt = `あなたは日本の不動産投資に特化した専門のAIアドバイザーです。
+
+【ユーザープロファイル】
+- 投資家レベル: ${aiAnalysis?.investorLevel || 'unknown'}
+- 年収: ${currentState.profile.annualIncome || 'unknown'}万円
+- 投資経験: ${currentState.profile.experienceYears || 'unknown'}年
+- 投資目標: ${currentState.profile.investmentGoal || 'unknown'}
+- 予算範囲: ${currentState.profile.budgetRange ? `${currentState.profile.budgetRange.min}-${currentState.profile.budgetRange.max}万円` : 'unknown'}
+
+【現在の会話フェーズ】
+${currentState.phase} (ステップ ${currentState.step})
 
 【専門分野】
-- 日本の不動産投資市場分析
-- 物件評価と収益計算
-- 税制優遇と節税対策
-- 融資戦略とリスク管理
-- 市場動向と将来予測
+- 投資家レベル別の戦略提案
+- 札幌・北海道不動産市場分析
+- 個人最適化された物件推薦
+- リスク評価と管理戦略
+- 具体的な収支シミュレーション
 
 【回答スタイル】
-1. 親しみやすく、わかりやすい日本語で回答
-2. 具体的な数値例や計算方法を提示
-3. リスクと注意点も必ず説明
-4. 初心者にも理解しやすい説明を心がける
-5. 必要に応じて次のステップを提案
+1. ユーザーのレベルに合わせた説明
+2. 会話の流れを考慮した自然な対話
+3. 具体的な数値と根拠を提示
+4. リスクの透明性を重視
+5. 次のステップを明確に提案
 
-【重要な注意事項】
-- 投資にはリスクが伴うことを明記
-- 個別の投資判断は最終的にユーザー自身の責任
-- 法的・税務的な詳細は専門家への相談を推奨
-- 市場予測は過去のデータに基づく推測であることを明示
+【重要事項】
+- 投資判断は最終的にユーザー自身の責任
+- 法的・税務的詳細は専門家相談を推奨
+- 市場予測の不確実性を明示`
 
-【回答形式】
-- 結論を先に述べる
-- 理由を3つ以内で整理
-- 具体例があれば提示
-- 次のアクションを提案`
+    // 会話履歴をメッセージ形式に変換
+    const messages = [
+      { role: "system", content: enhancedSystemPrompt },
+      ...conversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      })),
+      { role: "user", content: message }
+    ]
 
     // OpenAI APIに送信
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      max_tokens: 1000,
+      messages,
+      max_tokens: 1200,
       temperature: 0.7,
       top_p: 1,
       frequency_penalty: 0,
@@ -200,14 +198,34 @@ ${specificAdvice}
 
     const aiResponse = completion.choices[0]?.message?.content || '申し訳ございません。回答の生成中にエラーが発生しました。もう一度お試しください。'
     
-    // Step 7の本格的なAI応答
+    // AIメッセージを記録
+    conversationManager.addMessage({
+      role: 'assistant',
+      content: aiResponse,
+      metadata: {
+        phase: currentState.phase,
+        extractedInfo,
+        suggestions: propertyRecommendations.map(p => p.property.name)
+      }
+    })
+    
+    // Step 8の高度なAI応答
     return new Response(JSON.stringify({
       message: aiResponse,
       timestamp: new Date().toISOString(),
       type: 'ai',
-      step: 7,
+      step: 8,
       isDemo: false,
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o-mini-enhanced',
+      sessionId: sessionKey,
+      conversationState: conversationManager.getSerializableState(),
+      extractedProfile: extractedInfo,
+      propertyRecommendations: propertyRecommendations.map(match => ({
+        property: match.property,
+        matchScore: match.matchScore,
+        recommendation: match.recommendation
+      })),
+      aiAnalysis,
       usage: {
         prompt_tokens: completion.usage?.prompt_tokens || 0,
         completion_tokens: completion.usage?.completion_tokens || 0,
