@@ -2,19 +2,44 @@
 
 import { useState, useRef, useEffect } from 'react'
 
+interface PropertyRecommendation {
+  property: {
+    name: string;
+    price: number;
+    grossYield: number;
+    layout: string;
+    floorArea: number;
+    location: {
+      city: string;
+      ward: string;
+    };
+  };
+  matchScore: number;
+  recommendation: string;
+}
+
+interface AIAnalysis {
+  investorLevel: string;
+  maxPropertyPrice: number;
+  recommendedYield: {
+    min: number;
+    max: number;
+  };
+}
+
 interface Message {
   id: number;
   sender: 'user' | 'ai';
   message: string;
   timestamp: string;
-  propertyRecommendations?: any[];
-  aiAnalysis?: any;
-  extractedProfile?: any;
+  propertyRecommendations?: PropertyRecommendation[];
+  aiAnalysis?: AIAnalysis;
+  extractedProfile?: Record<string, unknown>;
 }
 
 interface ConversationState {
   sessionId?: string;
-  conversationState?: any;
+  conversationState?: Record<string, unknown>;
 }
 
 export default function SimpleChat() {
@@ -106,7 +131,7 @@ export default function SimpleChat() {
   }
 
   // プロファイル表示コンポーネント
-  const ProfileDisplay = ({ aiAnalysis }: { aiAnalysis: any }) => (
+  const ProfileDisplay = ({ aiAnalysis }: { aiAnalysis: AIAnalysis }) => (
     <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-3 my-2 border-l-4 border-blue-500">
       <h4 className="font-semibold text-sm text-gray-700 mb-2">📊 あなたの投資家プロファイル</h4>
       <div className="text-xs text-gray-600 space-y-1">
@@ -118,7 +143,7 @@ export default function SimpleChat() {
   )
 
   // 物件推薦カード表示コンポーネント
-  const PropertyCard = ({ property, matchScore, recommendation }: { property: any, matchScore: number, recommendation: string }) => (
+  const PropertyCard = ({ property, matchScore, recommendation }: { property: PropertyRecommendation['property'], matchScore: number, recommendation: string }) => (
     <div className="bg-white rounded-lg border border-gray-200 p-3 my-2 shadow-sm">
       <div className="flex justify-between items-start mb-2">
         <h4 className="font-semibold text-sm text-gray-800">{property.name}</h4>
@@ -181,7 +206,7 @@ export default function SimpleChat() {
               {msg.sender === 'ai' && msg.propertyRecommendations && msg.propertyRecommendations.length > 0 && (
                 <div className="mt-3">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">🎯 お勧め物件</h4>
-                  {msg.propertyRecommendations.map((rec: any, index: number) => (
+                  {msg.propertyRecommendations.map((rec: PropertyRecommendation, index: number) => (
                     <PropertyCard 
                       key={index}
                       property={rec.property}

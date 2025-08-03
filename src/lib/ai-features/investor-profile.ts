@@ -42,7 +42,6 @@ export interface InvestorClassification {
 export function classifyInvestor(profile: InvestorProfile): InvestorClassification {
   const {
     annualIncome = 0,
-    totalAssets = 0,
     realEstateAssets = 0,
     experienceYears = 0
   } = profile;

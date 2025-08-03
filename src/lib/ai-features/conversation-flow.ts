@@ -257,7 +257,7 @@ ${classification.characteristics.map(c => `• ${c}`).join('\n')}
   }
 
   // 状態の保存用データを取得
-  getSerializableState(): any {
+  getSerializableState(): Record<string, unknown> {
     return {
       sessionId: this.state.sessionId,
       phase: this.state.phase,

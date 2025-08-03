@@ -41,9 +41,9 @@ export async function POST(request: Request) {
     const currentState = conversationManager.getState()
     
     // 次の質問の取得
-    let nextQuestion = conversationManager.getNextQuestion()
-    let propertyRecommendations = []
-    let aiAnalysis = null
+    const nextQuestion = conversationManager.getNextQuestion()
+    let propertyRecommendations: any[] = []
+    let aiAnalysis: any = null
 
     // 物件推薦フェーズの場合
     if (currentState.phase === 'property_search' || currentState.phase === 'detailed_advice') {
@@ -107,7 +107,7 @@ ${aiAnalysis.characteristics.map(c => `• ${c}`).join('\n')}`
       }
 
       // AIメッセージを記録
-      const aiMessage = conversationManager.addMessage({
+      conversationManager.addMessage({
         role: 'assistant',
         content: response,
         metadata: {

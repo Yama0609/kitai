@@ -262,7 +262,7 @@ export class PropertyMatcher {
   }
 
   // レベル別物件フィルタリング
-  private static filterPropertiesByLevel(classification: any): Property[] {
+  private static filterPropertiesByLevel(classification: { level: string; maxPropertyPrice: number }): Property[] {
     return SAMPLE_PROPERTIES.filter(property => {
       // 価格制限チェック
       if (property.price > classification.maxPropertyPrice) {
@@ -297,7 +297,7 @@ export class PropertyMatcher {
   private static calculateMatch(
     property: Property, 
     profile: InvestorProfile, 
-    classification: any
+    classification: { level: InvestorLevel; recommendedYieldRange: { min: number; max: number } }
   ): PropertyMatch {
     let score = 0;
     const reasons: string[] = [];
@@ -399,7 +399,7 @@ export class PropertyMatcher {
 
   private static generateRecommendation(
     property: Property, 
-    classification: any, 
+    classification: { level: InvestorLevel }, 
     score: number
   ): string {
     if (score >= 80) {
@@ -414,7 +414,7 @@ export class PropertyMatcher {
   }
 
   // 物件詳細分析
-  static analyzeProperty(property: Property, profile: InvestorProfile): {
+  static analyzeProperty(property: Property, _profile: InvestorProfile): {
     cashFlow: number;
     roi: number;
     paybackPeriod: number;
