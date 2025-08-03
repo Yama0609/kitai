@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // デモモード（基本機能フル動作）
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'test-key-for-development' || true) {
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'test-key-for-development') {
       
       // 会話フローに基づく応答生成
       let response = nextQuestion || '投資に関してご質問をお聞かせください。'
