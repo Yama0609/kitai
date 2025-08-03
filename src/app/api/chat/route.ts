@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         },
       })
     }
-
+    
     // セッション管理
     const sessionKey = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const conversationManager = new ConversationManager(sessionKey, conversationState)
@@ -42,8 +42,33 @@ export async function POST(request: Request) {
     
     // 次の質問の取得
     const nextQuestion = conversationManager.getNextQuestion()
-    let propertyRecommendations: any[] = []
-    let aiAnalysis: any = null
+    let propertyRecommendations: Array<{
+      property: { 
+        name: string; 
+        price: number; 
+        grossYield: number; 
+        netYield: number;
+        layout: string; 
+        floorArea: number; 
+        location: { 
+          city: string; 
+          ward?: string; 
+          nearestStation: string; 
+          walkingMinutes: number; 
+        };
+        investmentHighlights: string[];
+      };
+      matchScore: number;
+      recommendation: string;
+      reasons: string[];
+      warnings: string[];
+    }> = []
+    let aiAnalysis: {
+      investorLevel: string;
+      maxPropertyPrice: number;
+      recommendedYield: { min: number; max: number };
+      characteristics: string[];
+    } | null = null
 
     // 物件推薦フェーズの場合
     if (currentState.phase === 'property_search' || currentState.phase === 'detailed_advice') {
@@ -90,7 +115,7 @@ ${match.warnings.length > 0 ? `\n⚠️ ${match.warnings[0]}` : ''}
 
       // AI分析情報を追加
       if (aiAnalysis) {
-        const levelNames = {
+        const levelNames: Record<string, string> = {
           'beginner': 'ビギナー投資家',
           'experienced': '経験豊富な投資家',
           'semi-pro': 'セミプロ投資家', 
@@ -98,7 +123,7 @@ ${match.warnings.length > 0 ? `\n⚠️ ${match.warnings[0]}` : ''}
         }
         
         response += `\n\n**📊 あなたの投資家プロファイル**
-🎯 レベル: ${levelNames[aiAnalysis.investorLevel]}
+🎯 レベル: ${levelNames[aiAnalysis.investorLevel] || aiAnalysis.investorLevel}
 💰 推奨物件価格: ${aiAnalysis.maxPropertyPrice.toLocaleString()}万円以下
 📈 目標利回り: ${aiAnalysis.recommendedYield.min}-${aiAnalysis.recommendedYield.max}%
 
@@ -116,7 +141,7 @@ ${aiAnalysis.characteristics.map(c => `• ${c}`).join('\n')}`
           suggestions: propertyRecommendations.map(p => p.property.name)
         }
       })
-
+      
       return new Response(JSON.stringify({
         message: response,
         timestamp: new Date().toISOString(),
@@ -177,12 +202,12 @@ ${currentState.phase} (ステップ ${currentState.step})
 
     // 会話履歴をメッセージ形式に変換
     const messages = [
-      { role: "system", content: enhancedSystemPrompt },
+      { role: "system" as const, content: enhancedSystemPrompt },
       ...conversationHistory.map(msg => ({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        role: (msg.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
         content: msg.content
       })),
-      { role: "user", content: message }
+      { role: "user" as const, content: message }
     ]
 
     // OpenAI APIに送信
