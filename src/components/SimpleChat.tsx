@@ -169,11 +169,11 @@ export default function SimpleChat() {
       {/* チャットヘッダー */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4">
         <div className="flex items-center space-x-3">
-          <img 
-            src="/tamaki-character.svg" 
-            alt="TAMAKIマン" 
-            className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
-          />
+                            <img 
+                    src="/tamaki-character.svg" 
+                    alt="TAMAKIマン" 
+                    className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
+                  />
           <div>
             <h2 className="text-lg font-semibold">🏠 TAMAKIマン - AI不動産投資アドバイザー</h2>
             <p className="text-sm text-orange-100 mt-1">一緒に最適な投資戦略を見つけましょう！</p>
