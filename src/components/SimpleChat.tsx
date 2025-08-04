@@ -172,7 +172,7 @@ export default function SimpleChat() {
                             <img 
                     src="/tamaki-character.png" 
                     alt="TAMAKIマン" 
-                    className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
+                    className="w-16 h-16 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
                   />
           <div>
             <h2 className="text-lg font-semibold">🏠 TAMAKIマン - AI不動産投資アドバイザー</h2>
@@ -202,7 +202,7 @@ export default function SimpleChat() {
                   <img 
                     src="/tamaki-character.png" 
                     alt="TAMAKIマン" 
-                    className="w-12 h-12 rounded-full border-2 border-orange-300 shadow-md bg-white p-1"
+                    className="w-16 h-16 rounded-full border-2 border-orange-300 shadow-md bg-white p-1"
                   />
                 </div>
               )}
@@ -235,7 +235,14 @@ export default function SimpleChat() {
               {/* 物件推薦カード表示 */}
               {msg.sender === 'ai' && msg.propertyRecommendations && msg.propertyRecommendations.length > 0 && (
                 <div className="mt-3">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">🎯 お勧め物件</h4>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <img 
+                      src="/tamaki-character.png" 
+                      alt="TAMAKIマン" 
+                      className="w-6 h-6 rounded-full border border-orange-300 bg-white"
+                    />
+                    <h4 className="text-sm font-semibold text-gray-700">TAMAKIマンのお勧め物件</h4>
+                  </div>
                   {msg.propertyRecommendations.map((rec: PropertyRecommendation, index: number) => (
                     <PropertyCard 
                       key={index}
