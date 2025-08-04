@@ -55,6 +55,7 @@ export default function SimpleChat() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [conversation, setConversation] = useState<ConversationState>({})
+  const [isComposing, setIsComposing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // 自動スクロール
@@ -255,9 +256,11 @@ export default function SimpleChat() {
               placeholder="投資の目標、現在の状況、物件の希望条件など、なんでもお聞かせください..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               onKeyDown={(e) => {
                 // IME入力中（日本語変換中）は送信しない
-                if ((e.nativeEvent as any).isComposing) {
+                if (isComposing) {
                   return
                 }
                 
