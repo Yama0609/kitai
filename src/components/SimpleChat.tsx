@@ -170,7 +170,7 @@ export default function SimpleChat() {
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4">
         <div className="flex items-center space-x-3">
                             <img 
-                    src="/tamaki-character.svg" 
+                    src="/tamaki-character.png" 
                     alt="TAMAKIマン" 
                     className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
                   />
@@ -200,7 +200,7 @@ export default function SimpleChat() {
               {msg.sender === 'ai' && (
                 <div className="flex-shrink-0">
                   <img 
-                    src="/tamaki-character.svg" 
+                    src="/tamaki-character.png" 
                     alt="TAMAKIマン" 
                     className="w-12 h-12 rounded-full border-2 border-orange-300 shadow-md bg-white p-1"
                   />
