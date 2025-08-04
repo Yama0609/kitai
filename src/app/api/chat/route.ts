@@ -231,10 +231,55 @@ ${currentState.phase} (ステップ ${currentState.step})
 
     const aiResponse = completion.choices[0]?.message?.content || '申し訳ございません。回答の生成中にエラーが発生しました。もう一度お試しください。'
     
+    // 本番モード：GPT応答に高度AI機能を統合
+    let enhancedResponse = aiResponse
+    
+    // 物件推薦カードを追加
+    if (propertyRecommendations.length > 0) {
+      const propertyCards = propertyRecommendations.map(match => {
+        const property = match.property
+        return `
+
+**🏢 ${property.name}**
+📍 ${property.location.city}${property.location.ward} (${property.location.nearestStation}徒歩${property.location.walkingMinutes}分)
+💰 価格: ${property.price.toLocaleString()}万円
+📊 利回り: 表面${property.grossYield}% / 実質${property.netYield}%
+🏠 ${property.layout} / ${property.floorArea}㎡
+⭐ マッチ度: ${match.matchScore}点/100点
+
+**推薦理由:**
+${match.reasons.map(r => `• ${r}`).join('\n')}
+
+**投資ポイント:**
+${property.investmentHighlights.slice(0, 2).map(h => `• ${h}`).join('\n')}
+${match.warnings.length > 0 ? `\n⚠️ ${match.warnings[0]}` : ''}`
+      }).join('\n---\n')
+      
+      enhancedResponse += `\n\n**🎯 あなたにお勧めの物件**\n${propertyCards}`
+    }
+
+    // AI分析情報を追加
+    if (aiAnalysis) {
+      const levelNames: Record<string, string> = {
+        'beginner': 'ビギナー投資家',
+        'experienced': '経験豊富な投資家',
+        'semi-pro': 'セミプロ投資家', 
+        'pro': 'プロ投資家'
+      }
+      
+      enhancedResponse += `\n\n**📊 あなたの投資家プロファイル**
+🎯 レベル: ${levelNames[aiAnalysis.investorLevel] || aiAnalysis.investorLevel}
+💰 推奨物件価格: ${aiAnalysis.maxPropertyPrice.toLocaleString()}万円以下
+📈 目標利回り: ${aiAnalysis.recommendedYield.min}-${aiAnalysis.recommendedYield.max}%
+
+**特徴:**
+${aiAnalysis.characteristics.map(c => `• ${c}`).join('\n')}`
+    }
+    
     // AIメッセージを記録
     conversationManager.addMessage({
       role: 'assistant',
-      content: aiResponse,
+      content: enhancedResponse,
       metadata: {
         phase: currentState.phase,
         extractedInfo,
@@ -244,7 +289,7 @@ ${currentState.phase} (ステップ ${currentState.step})
     
     // Step 8の高度なAI応答
     return new Response(JSON.stringify({
-      message: aiResponse,
+      message: enhancedResponse,
       timestamp: new Date().toISOString(),
       type: 'ai',
       step: 8,
