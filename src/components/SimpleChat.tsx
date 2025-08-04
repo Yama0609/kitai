@@ -256,17 +256,25 @@ export default function SimpleChat() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                // IME入力中（日本語変換中）は送信しない
+                if (e.isComposing) {
+                  return
+                }
+                
+                // Ctrl+Enterで送信
+                if (e.key === 'Enter' && e.ctrlKey) {
                   e.preventDefault()
                   sendMessage()
                 }
+                
+                // 単純なEnterは改行（デフォルト動作）
               }}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               rows={2}
               disabled={isLoading}
             />
             <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
-              <span>💡 Enterで送信、Shift+Enterで改行</span>
+              <span>💡 Ctrl+Enterで送信、Enterで改行</span>
               <span className={inputMessage.length > 500 ? 'text-red-500' : 'text-gray-400'}>
                 {inputMessage.length}/500
               </span>
