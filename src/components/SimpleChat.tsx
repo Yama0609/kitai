@@ -47,7 +47,7 @@ export default function SimpleChat() {
     {
       id: 1,
       sender: 'ai',
-      message: 'こんにちは！AI不動産投資アドバイザーです 🏢✨\n\nあなたの投資目標に最適な戦略と物件をご提案するため、まずは簡単な質問にお答えください。\n\n**まず最初に、現在の状況を教えてください：**\n1. 年収はどのくらいでしょうか？\n2. 不動産投資の経験はありますか？\n3. どのような投資目標をお持ちですか？\n\nざっくりとした内容で構いませんので、お気軽にお聞かせください！',
+      message: 'こんにちは！TAMAKIです 🏠✨\n\nみなさんの不動産投資をサポートする、AI投資アドバイザーのTAMAKIです！一緒に最適な投資戦略を見つけましょう！\n\n**まずは、あなたの現在の状況を教えてください：**\n\n💰 年収はどのくらいですか？\n📈 不動産投資の経験はありますか？\n🎯 どのような投資目標をお持ちですか？\n\nなんでも気軽に話しかけてくださいね！TAMAKIが全力でサポートします 😊',
       timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     }
   ])
@@ -167,15 +167,24 @@ export default function SimpleChat() {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       {/* チャットヘッダー */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
-        <h2 className="text-lg font-semibold">🏢 AI不動産投資アドバイザー</h2>
-        <p className="text-sm text-blue-100 mt-1">あなた専用の投資戦略を提案します</p>
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4">
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/tamaki-character.svg" 
+            alt="TAMAKIマン" 
+            className="w-12 h-12 rounded-full border-2 border-orange-200 shadow-md bg-white p-1"
+          />
+          <div>
+            <h2 className="text-lg font-semibold">🏠 TAMAKIマン - AI不動産投資アドバイザー</h2>
+            <p className="text-sm text-orange-100 mt-1">一緒に最適な投資戦略を見つけましょう！</p>
+          </div>
+        </div>
       </div>
 
       {/* 会話状態インジケーター */}
       {conversation.sessionId && (
-        <div className="bg-blue-50 px-4 py-2 text-xs text-blue-700 border-b">
-          💬 セッション進行中 | 会話履歴を記憶しています
+        <div className="bg-orange-50 px-4 py-2 text-xs text-orange-700 border-b">
+          🏠 TAMAKIマンがサポート中 | 会話履歴を記憶しています
         </div>
       )}
 
@@ -185,16 +194,36 @@ export default function SimpleChat() {
           <div key={msg.id} className={`mb-6 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
             <div className={`inline-block max-w-xs lg:max-w-2xl ${
               msg.sender === 'user' ? 'text-right' : 'text-left'
-            }`}>
-              {/* メッセージバブル */}
-              <div className={`px-4 py-3 rounded-lg ${
-                msg.sender === 'user' 
-                  ? 'bg-blue-500 text-white rounded-br-none' 
-                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'
-              }`}>
-                <div className="text-sm whitespace-pre-wrap">{msg.message}</div>
-                <div className={`text-xs mt-2 ${msg.sender === 'user' ? 'text-blue-200' : 'text-gray-500'}`}>
-                  {msg.timestamp}
+            } ${msg.sender === 'ai' ? 'flex items-start space-x-3' : ''}`}>
+              
+              {/* TAMAKIマンアバター（AIメッセージのみ） */}
+              {msg.sender === 'ai' && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src="/tamaki-character.svg" 
+                    alt="TAMAKIマン" 
+                    className="w-12 h-12 rounded-full border-2 border-orange-300 shadow-md bg-white p-1"
+                  />
+                </div>
+              )}
+              
+              <div className="flex-1">
+                {/* メッセージバブル */}
+                <div className={`px-4 py-3 rounded-lg ${
+                  msg.sender === 'user' 
+                    ? 'bg-blue-500 text-white rounded-br-none' 
+                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'
+                }`}>
+                  {/* TAMAKIマン名前表示 */}
+                  {msg.sender === 'ai' && (
+                    <div className="text-xs text-orange-600 font-semibold mb-1 flex items-center">
+                      🏠 TAMAKIマン
+                    </div>
+                  )}
+                  <div className="text-sm whitespace-pre-wrap">{msg.message}</div>
+                  <div className={`text-xs mt-2 ${msg.sender === 'user' ? 'text-blue-200' : 'text-gray-500'}`}>
+                    {msg.timestamp}
+                  </div>
                 </div>
               </div>
 
@@ -238,11 +267,12 @@ export default function SimpleChat() {
       <div className="p-4 border-t border-gray-200 bg-white">
         {/* クイック質問ボタン */}
         <div className="mb-3 flex flex-wrap gap-2">
-          {['年収600万、初心者です', '札幌で2000万円以下', '利回り8%以上希望', '物件を比較したい'].map((quickMsg) => (
+          <div className="text-xs text-gray-600 mb-1 w-full">💡 TAMAKIマンへの質問例：</div>
+          {['年収600万、初心者です！', '札幌で2000万円以下で', '利回り8%以上を目指したい', '物件を比較してほしい'].map((quickMsg) => (
             <button
               key={quickMsg}
               onClick={() => setInputMessage(quickMsg)}
-              className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+              className="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors"
               disabled={isLoading}
             >
               {quickMsg}
