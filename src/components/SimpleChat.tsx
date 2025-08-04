@@ -257,7 +257,7 @@ export default function SimpleChat() {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => {
                 // IME入力中（日本語変換中）は送信しない
-                if (e.isComposing) {
+                if ((e.nativeEvent as any).isComposing) {
                   return
                 }
                 
